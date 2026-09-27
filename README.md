@@ -1,4 +1,4 @@
-# KhanRakshak
+k# KhanRakshak
 
 Integrated governance and compliance platform for coal mines. The demo uses synthetic records; it is not connected to live mine or regulator systems.
 

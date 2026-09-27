@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createFieldReport, getMines } from "../api/index.js";
 import {
   enqueueReport,
@@ -26,6 +26,10 @@ function FieldReport() {
   const [mines, setMines] = useState([]);
   const [queuedCount, setQueuedCount] = useState(0);
   const [message, setMessage] = useState("");
+  const [voiceNote, setVoiceNote] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   useEffect(() => {
     const cachedMines = localStorage.getItem("khanrakshak-mines");
@@ -122,6 +126,32 @@ function FieldReport() {
     reader.readAsDataURL(file);
   }
 
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (event) => audioChunksRef.current.push(event.data);
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const reader = new FileReader();
+        reader.onload = () => setVoiceNote(String(reader.result));
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch {
+      setMessage("Microphone access is not available on this device.");
+    }
+  }
+
+  function stopRecording() {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  }
+
   async function prepareReport(event) {
     event.preventDefault();
 
@@ -148,7 +178,8 @@ function FieldReport() {
         longitude: location.longitude,
         category,
         observation,
-        photo_url: photo
+        photo_url: photo,
+        voice_note_url: voiceNote
       };
 
       if (!navigator.onLine) {
@@ -167,6 +198,7 @@ function FieldReport() {
       }
       setObservation("");
       setPhoto("");
+      setVoiceNote("");
     } catch (error) {
       setMessage(`Unable to synchronize field report: ${error.message}`);
     }
@@ -240,6 +272,20 @@ function FieldReport() {
               onChange={capturePhoto}
             />
             {photo && <img className="field-photo-preview" src={photo} alt="Selected site report" />}
+          </div>
+
+          <div className="field-section">
+            <label className="field-label">VOICE NOTE (ANY LANGUAGE)</label>
+            {!isRecording ? (
+              <button type="button" onClick={startRecording}>
+                {voiceNote ? "Re-record Voice Note" : "Record Voice Note"}
+              </button>
+            ) : (
+              <button type="button" onClick={stopRecording}>Stop Recording</button>
+            )}
+            {voiceNote && (
+              <audio className="field-audio-preview" controls src={voiceNote}></audio>
+            )}
           </div>
 
           <div className="field-submit">

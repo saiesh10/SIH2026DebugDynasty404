@@ -25,7 +25,8 @@ CREATE TABLE compliance_record (
   issue_date DATE,
   expiry_date DATE,
   status TEXT CHECK (status IN ('valid','expired','pending_renewal')),
-  responsible_officer TEXT
+  responsible_officer TEXT,
+  data_source TEXT CHECK (data_source IN ('PARIVESH', 'manual', 'other'))
 );
 
 CREATE TABLE inspection (
@@ -53,6 +54,7 @@ CREATE TABLE field_report (
   longitude FLOAT,
   photo_url TEXT,
   observation TEXT NOT NULL DEFAULT '',
+  voice_note_url TEXT,
   category TEXT CHECK (category IN ('safety_observation','incident','attendance')),
   submitted_at TIMESTAMP DEFAULT now(),
   synced BOOLEAN DEFAULT true

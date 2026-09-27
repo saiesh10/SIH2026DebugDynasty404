@@ -183,7 +183,12 @@ function MineOfficialDashboard() {
                 <span>{record.responsible_officer || "Officer not assigned"}</span>
               </div>
               <span>{new Date(record.expiry_date).toLocaleDateString("en-IN")}</span>
-              <b className={`compliance-status ${record.status}`}>{record.status.replaceAll("_", " ")}</b>
+              <div>
+                <b className={`compliance-status ${record.status}`}>{record.status.replaceAll("_", " ")}</b>
+                {record.data_source === "PARIVESH" && (
+                  <span className="data-source-badge">PARIVESH verified</span>
+                )}
+              </div>
             </div>
           ))}
         </section>

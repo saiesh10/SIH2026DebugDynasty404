@@ -5,6 +5,11 @@ import {
   detectZScoreAnomalies,
   buildSyntheticMineSeries
 } from "../risk/anomalyModel.js";
+import {
+  bucketHighSeverityByMonth,
+  linearTrendSlope,
+  projectDaysToThreshold
+} from "../risk/trendForecast.js";
 
 const router = express.Router();
 
@@ -95,6 +100,13 @@ router.get("/:mineId", async (req, res) => {
 
     const syntheticSeries = buildSyntheticMineSeries(Number(mineId));
     const anomalyResults = detectZScoreAnomalies(syntheticSeries);
+    const monthlyHighSeverityBuckets = bucketHighSeverityByMonth(inspectionResult.rows);
+    const trendSlope = linearTrendSlope(monthlyHighSeverityBuckets);
+    const projectedDaysToHighRisk = projectDaysToThreshold({
+      currentScore: riskScore,
+      slope: trendSlope,
+      threshold: 60
+    });
 
     res.json({
       mine: mineResult.rows[0],
@@ -105,6 +117,11 @@ router.get("/:mineId", async (req, res) => {
         model: "z-score",
         series: syntheticSeries,
         anomalies: anomalyResults
+      },
+      forecast: {
+        monthly_high_severity_counts: monthlyHighSeverityBuckets,
+        trend_slope: Number(trendSlope.toFixed(3)),
+        projected_days_to_high_risk: projectedDaysToHighRisk
       },
       compliance,
       inspections

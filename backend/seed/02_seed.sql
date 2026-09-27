@@ -197,3 +197,19 @@ VALUES
   ('CREATE', 'inspection', 2, 'seed-hash-007', 'seed-hash-008'),
   ('CREATE', 'compliance_record', 1, 'seed-hash-008', 'seed-hash-009'),
   ('CREATE', 'corrective_action', 1, 'seed-hash-009', 'seed-hash-010');
+
+-- PARIVESH-verified source records from the public audit trail.
+UPDATE compliance_record
+SET data_source = 'PARIVESH'
+WHERE mine_id = (SELECT id FROM mine WHERE name = 'Jayant Mine')
+  AND type = 'EC';
+
+UPDATE compliance_record
+SET data_source = 'PARIVESH'
+WHERE mine_id = (SELECT id FROM mine WHERE name = 'Gevra Mine')
+  AND type = 'EC';
+
+UPDATE compliance_record
+SET data_source = 'PARIVESH'
+WHERE mine_id = (SELECT id FROM mine WHERE name = 'Kusmunda Mine')
+  AND type = 'EC';

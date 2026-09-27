@@ -106,6 +106,11 @@ function CorporateDashboard() {
                     {risk.risk_flags?.length || 0} rule flags; {" "}
                     {risk.anomaly_model?.anomalies?.length || 0} model anomalies
                   </span>
+                  {risk.forecast?.projected_days_to_high_risk != null && (
+                    <span className="risk-forecast">
+                      Trending up — high-risk in ~{risk.forecast.projected_days_to_high_risk} days
+                    </span>
+                  )}
                 </div>
 
                 <div className="risk-gauge">

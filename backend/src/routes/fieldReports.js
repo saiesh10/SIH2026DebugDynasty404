@@ -11,7 +11,8 @@ router.post("/", async (req, res) => {
       longitude,
       photo_url,
       category,
-      observation
+      observation,
+      voice_note_url
     } = req.body;
 
     if (
@@ -35,9 +36,10 @@ router.post("/", async (req, res) => {
           photo_url,
           observation,
           category,
+          voice_note_url,
           synced
         )
-        VALUES ($1, $2, $3, $4, $5, $6, true)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, true)
         RETURNING *;
       `,
       [
@@ -46,7 +48,8 @@ router.post("/", async (req, res) => {
         longitude,
         photo_url || null,
         observation.trim(),
-        category
+        category,
+        voice_note_url || null
       ]
     );
 

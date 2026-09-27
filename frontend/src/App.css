@@ -652,6 +652,21 @@ button[type="button"]:not(.dashboard-nav button) {
   text-transform: capitalize;
 }
 
+.data-source-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border: 1px solid rgba(201, 124, 44, 0.5);
+  background: rgba(242, 177, 52, 0.16);
+  color: var(--basalt);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
 .compliance-status.expired,
 .severity-label.high {
   color: var(--hazard);
@@ -891,6 +906,16 @@ button[type="button"]:not(.dashboard-nav button) {
   margin-top: 6px;
   color: var(--brass);
   font-size: 11px;
+}
+
+.risk-forecast {
+  display: block;
+  margin-top: 6px;
+  color: var(--hazard);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .risk-gauge {
@@ -1300,6 +1325,13 @@ button[type="button"]:not(.dashboard-nav button) {
   object-fit: contain;
   object-position: left;
   background: #25211D;
+}
+
+.field-audio-preview {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 12px;
 }
 
 .field-section textarea {

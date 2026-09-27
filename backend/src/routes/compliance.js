@@ -15,7 +15,8 @@ router.get("/", async (req, res) => {
         cr.issue_date,
         cr.expiry_date,
         CASE WHEN cr.expiry_date < CURRENT_DATE THEN 'expired' ELSE cr.status END AS status,
-        cr.responsible_officer
+        cr.responsible_officer,
+        cr.data_source
       FROM compliance_record cr
       LEFT JOIN mine m ON cr.mine_id = m.id
       ORDER BY cr.expiry_date ASC;
@@ -44,7 +45,8 @@ router.get("/:id", async (req, res) => {
         cr.issue_date,
         cr.expiry_date,
         CASE WHEN cr.expiry_date < CURRENT_DATE THEN 'expired' ELSE cr.status END AS status,
-        cr.responsible_officer
+        cr.responsible_officer,
+        cr.data_source
       FROM compliance_record cr
       LEFT JOIN mine m ON cr.mine_id = m.id
       WHERE cr.id = $1;
@@ -66,7 +68,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { mine_id, type, issue_date, expiry_date, status, responsible_officer } = req.body;
+  const { mine_id, type, issue_date, expiry_date, status, responsible_officer, data_source } = req.body;
   if (!mine_id || !type || !expiry_date) {
     return res.status(400).json({ error: "mine_id, type and expiry_date are required" });
   }
@@ -74,10 +76,10 @@ router.post("/", async (req, res) => {
   try {
     const result = await pool.query(
       `INSERT INTO compliance_record
-         (mine_id, type, issue_date, expiry_date, status, responsible_officer)
-       VALUES ($1, $2, $3, $4, $5, $6)
+         (mine_id, type, issue_date, expiry_date, status, responsible_officer, data_source)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *;`,
-      [mine_id, type, issue_date || null, expiry_date, status || "valid", responsible_officer || null]
+      [mine_id, type, issue_date || null, expiry_date, status || "valid", responsible_officer || null, data_source || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -87,7 +89,7 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
-  const { mine_id, type, issue_date, expiry_date, status, responsible_officer } = req.body;
+  const { mine_id, type, issue_date, expiry_date, status, responsible_officer, data_source } = req.body;
   if (!mine_id || !type || !expiry_date) {
     return res.status(400).json({ error: "mine_id, type and expiry_date are required" });
   }
@@ -96,9 +98,9 @@ router.put("/:id", async (req, res) => {
     const result = await pool.query(
       `UPDATE compliance_record
        SET mine_id = $1, type = $2, issue_date = $3, expiry_date = $4,
-           status = $5, responsible_officer = $6
-       WHERE id = $7 RETURNING *;`,
-      [mine_id, type, issue_date || null, expiry_date, status || "valid", responsible_officer || null, req.params.id]
+           status = $5, responsible_officer = $6, data_source = $7
+       WHERE id = $8 RETURNING *;`,
+      [mine_id, type, issue_date || null, expiry_date, status || "valid", responsible_officer || null, data_source || null, req.params.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Compliance record not found" });
