@@ -1,0 +1,8 @@
+{
+  "name": "KhanRakshak",
+  "short_name": "KhanRakshak",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1A1815",
+  "theme_color": "#C97C2C"
+}
