@@ -8,6 +8,7 @@ import correctiveActionsRouter from "./routes/correctiveActions.js";
 import riskRouter from "./routes/risk.js";
 import dashboardRouter from "./routes/dashboard.js";
 import fieldReportsRouter from "./routes/fieldReports.js";
+import { startAlertScheduler } from "./jobs/alertScheduler.js";
 
 dotenv.config();
 
@@ -35,4 +36,5 @@ const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
   console.log(`KhanRakshak backend running on port ${PORT}`);
+  startAlertScheduler();
 });
