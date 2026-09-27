@@ -43,6 +43,10 @@ export function detectZScoreAnomalies(values = [], threshold = 2) {
 export function buildSyntheticMineSeries(seed = 0) {
   const base = 10 + seed;
 
+  if (seed % 3 === 0) {
+    return [base, base + 1, base - 1, base + 2, base, base + 9];
+  }
+
   return [
     base,
     base + 1,

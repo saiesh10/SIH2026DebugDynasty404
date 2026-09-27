@@ -9,6 +9,7 @@ router.post("/", async (req, res) => {
       mine_id,
       latitude,
       longitude,
+      photo_url,
       category,
       observation
     } = req.body;
@@ -31,16 +32,20 @@ router.post("/", async (req, res) => {
           mine_id,
           latitude,
           longitude,
+          photo_url,
+          observation,
           category,
           synced
         )
-        VALUES ($1, $2, $3, $4, true)
+        VALUES ($1, $2, $3, $4, $5, $6, true)
         RETURNING *;
       `,
       [
         mine_id,
         latitude,
         longitude,
+        photo_url || null,
+        observation.trim(),
         category
       ]
     );

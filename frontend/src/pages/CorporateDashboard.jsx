@@ -103,7 +103,7 @@ function CorporateDashboard() {
                 <div className="risk-mine">
                   <strong>{risk.mine.name}</strong>
                   <span>
-                    {risk.risk_flags?.length || 0} rule flags ·{" "}
+                    {risk.risk_flags?.length || 0} rule flags; {" "}
                     {risk.anomaly_model?.anomalies?.length || 0} model anomalies
                   </span>
                 </div>

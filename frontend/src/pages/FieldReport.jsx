@@ -1,11 +1,78 @@
-import React, { useState } from "react";
-import { createFieldReport } from "../api/index.js";
+import React, { useEffect, useState } from "react";
+import { createFieldReport, getMines } from "../api/index.js";
+import {
+  enqueueReport,
+  getQueuedReports,
+  removeQueuedReport
+} from "../api/offlineQueue.js";
+
+function distanceBetween(first, second) {
+  const radians = (degrees) => (degrees * Math.PI) / 180;
+  const latitudeDelta = radians(second.latitude - first.latitude);
+  const longitudeDelta = radians(second.longitude - first.longitude);
+  const value =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(radians(first.latitude)) *
+      Math.cos(radians(second.latitude)) *
+      Math.sin(longitudeDelta / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value));
+}
 
 function FieldReport() {
   const [location, setLocation] = useState(null);
   const [category, setCategory] = useState("safety_observation");
   const [observation, setObservation] = useState("");
+  const [photo, setPhoto] = useState("");
+  const [mines, setMines] = useState([]);
+  const [queuedCount, setQueuedCount] = useState(0);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const cachedMines = localStorage.getItem("khanrakshak-mines");
+    if (cachedMines) {
+      try {
+        setMines(JSON.parse(cachedMines));
+      } catch {
+        localStorage.removeItem("khanrakshak-mines");
+      }
+    }
+
+    getMines()
+      .then((data) => {
+        setMines(data);
+        localStorage.setItem("khanrakshak-mines", JSON.stringify(data));
+      })
+      .catch(() => {});
+
+    getQueuedReports()
+      .then((reports) => setQueuedCount(reports.length))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    async function syncQueuedReports() {
+      try {
+        const reports = await getQueuedReports();
+        for (const report of reports) {
+          try {
+            await createFieldReport(report);
+            await removeQueuedReport(report.queued_at);
+          } catch {
+            break;
+          }
+        }
+        setQueuedCount((await getQueuedReports()).length);
+      } catch {
+        setMessage("Offline report storage is unavailable in this browser.");
+      }
+    }
+
+    window.addEventListener("online", syncQueuedReports);
+    if (navigator.onLine) {
+      syncQueuedReports();
+    }
+    return () => window.removeEventListener("online", syncQueuedReports);
+  }, []);
 
   function captureLocation() {
     if (!navigator.geolocation) {
@@ -15,11 +82,22 @@ function FieldReport() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLocation({
+        const coordinates = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
-        });
-        setMessage("Location captured.");
+        };
+        setLocation(coordinates);
+        const nearestMine = mines
+          .map((mine) => ({
+            ...mine,
+            distance: distanceBetween(coordinates, mine)
+          }))
+          .sort((first, second) => first.distance - second.distance)[0];
+        setMessage(
+          nearestMine
+            ? `Location captured. Nearest mine: ${nearestMine.name}.`
+            : "Location captured. Mine records are not available yet."
+        );
       },
       () => {
         setMessage("Unable to capture location.");
@@ -27,11 +105,28 @@ function FieldReport() {
     );
   }
 
+  function capturePhoto(event) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setPhoto("");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage("Choose a photo smaller than 2 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => setPhoto(String(reader.result));
+    reader.readAsDataURL(file);
+  }
+
   async function prepareReport(event) {
     event.preventDefault();
 
-    if (!location) {
-      setMessage("Capture location before preparing the field report.");
+    if (!location || mines.length === 0) {
+      setMessage("Capture location after mine records have loaded.");
       return;
     }
 
@@ -41,16 +136,37 @@ function FieldReport() {
     }
 
     try {
-      await createFieldReport({
-        mine_id: 1,
+      const nearestMine = mines.reduce((nearest, mine) => {
+        const distance = distanceBetween(location, mine);
+        return !nearest || distance < nearest.distance
+          ? { mine, distance }
+          : nearest;
+      }, null);
+      const report = {
+        mine_id: nearestMine.mine.id,
         latitude: location.latitude,
         longitude: location.longitude,
         category,
-        observation
-      });
+        observation,
+        photo_url: photo
+      };
 
-      setMessage("Field report synchronized successfully.");
+      if (!navigator.onLine) {
+        await enqueueReport(report);
+        setQueuedCount((count) => count + 1);
+        setMessage(`Saved offline for ${nearestMine.mine.name}; it will sync when connected.`);
+      } else {
+        try {
+          await createFieldReport(report);
+          setMessage(`Field report synchronized for ${nearestMine.mine.name}.`);
+        } catch {
+          await enqueueReport(report);
+          setQueuedCount((count) => count + 1);
+          setMessage("Connection failed. Field report saved offline for syncing.");
+        }
+      }
       setObservation("");
+      setPhoto("");
     } catch (error) {
       setMessage(`Unable to synchronize field report: ${error.message}`);
     }
@@ -114,11 +230,21 @@ function FieldReport() {
             />
           </div>
 
+          <div className="field-section">
+            <label className="field-label" htmlFor="photo">SITE PHOTO</label>
+            <input
+              id="photo"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={capturePhoto}
+            />
+            {photo && <img className="field-photo-preview" src={photo} alt="Selected site report" />}
+          </div>
+
           <div className="field-submit">
-            <button type="submit">Prepare Field Report</button>
-            <span className="field-status">
-              {location ? "GPS LOCKED" : "GPS REQUIRED"}
-            </span>
+            <button type="submit">Log field report</button>
+            <span className="field-status">{queuedCount} waiting to sync</span>
           </div>
         </form>
 

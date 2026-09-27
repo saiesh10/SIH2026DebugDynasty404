@@ -91,6 +91,92 @@ button {
   background: var(--ferrous);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.notification-control {
+  position: relative;
+}
+
+.notification-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #655A4E;
+  background: transparent;
+  color: var(--limestone);
+}
+
+.notification-toggle span {
+  min-width: 20px;
+  padding: 2px 5px;
+  background: var(--hazard);
+  color: white;
+  text-align: center;
+}
+
+.notification-popover {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 12px);
+  right: 0;
+  width: min(380px, calc(100vw - 32px));
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid #655A4E;
+  background: #F3EFE7;
+  color: var(--basalt);
+  box-shadow: 0 8px 24px rgba(26, 24, 21, 0.2);
+}
+
+.notification-heading {
+  padding: 14px 16px;
+  border-bottom: 1px solid #C9C0B3;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+}
+
+.notification-empty {
+  margin: 0;
+  padding: 16px;
+  color: var(--brass);
+}
+
+.notification-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #D8D0C3;
+}
+
+.notification-row.read {
+  opacity: 0.62;
+}
+
+.notification-row strong {
+  font-size: 13px;
+}
+
+.notification-row p {
+  margin: 4px 0 0;
+  color: #51493F;
+  font-size: 12px;
+}
+
+.notification-row button {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--hazard);
+  text-decoration: underline;
+}
+
 .dashboard-nav {
   min-height: 52px;
   padding: 0 36px;
@@ -277,7 +363,12 @@ button[type="button"]:not(.dashboard-nav button) {
 
 @media (max-width: 700px) {
   .topbar {
+    gap: 12px;
     padding: 0 20px;
+  }
+
+  .header-actions {
+    gap: 12px;
   }
 
   .dashboard-nav {
@@ -364,6 +455,18 @@ button[type="button"]:not(.dashboard-nav button) {
 .mine-content .panel-header h2 {
   margin-top: 3px;
   font-size: 24px;
+}
+
+.mine-picker {
+  display: grid;
+  gap: 5px;
+  color: var(--brass);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mine-picker select {
+  min-width: 190px;
 }
 
 .status-grid {
@@ -503,6 +606,107 @@ button[type="button"]:not(.dashboard-nav button) {
   font-size: 13px;
 }
 
+.site-register,
+.inspection-form {
+  margin-top: 24px;
+  border-top: 4px solid var(--ferrous);
+  background: #F8F5EF;
+}
+
+.compliance-row,
+.inspection-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(120px, auto) minmax(100px, auto);
+  align-items: center;
+  gap: 18px;
+  padding: 13px 16px;
+  border-bottom: 1px solid #D8D0C3;
+}
+
+.compliance-row > div,
+.inspection-row > div {
+  min-width: 0;
+}
+
+.compliance-row strong,
+.inspection-row strong {
+  display: block;
+  color: var(--basalt);
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.compliance-row span,
+.inspection-row span {
+  display: block;
+  margin-top: 4px;
+  color: var(--brass);
+  font-size: 12px;
+}
+
+.compliance-status,
+.severity-label {
+  justify-self: start;
+  color: var(--brass);
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.compliance-status.expired,
+.severity-label.high {
+  color: var(--hazard);
+}
+
+.compliance-status.pending_renewal,
+.severity-label.medium {
+  color: #8B6510;
+}
+
+.inspection-form > .ledger-heading {
+  border-bottom: 1px solid #C9C0B3;
+}
+
+.inspection-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.inspection-fields label {
+  display: grid;
+  gap: 6px;
+  color: var(--brass);
+  font-size: 12px;
+}
+
+.inspection-fields input,
+.inspection-fields select,
+.inspection-fields textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #B8AD9D;
+  background: #F3EFE7;
+  color: var(--basalt);
+}
+
+.inspection-findings {
+  grid-column: 1 / -1;
+}
+
+.inspection-submit {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px 16px;
+}
+
+.inspection-submit span {
+  color: var(--brass);
+  font-size: 13px;
+}
+
 @media (max-width: 900px) {
   .mine-strata {
     grid-template-columns: 1fr;
@@ -546,6 +750,35 @@ button[type="button"]:not(.dashboard-nav button) {
 
   .ledger-meta {
     text-align: left;
+  }
+
+  .mine-content > .panel-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .mine-picker,
+  .mine-picker select {
+    width: 100%;
+  }
+
+  .compliance-row,
+  .inspection-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+
+  .inspection-row time {
+    grid-column: 1 / -1;
+  }
+
+  .inspection-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .inspection-findings {
+    grid-column: auto;
   }
 }
 .corporate-strata {
@@ -1041,7 +1274,8 @@ button[type="button"]:not(.dashboard-nav button) {
 }
 
 .field-section select,
-.field-section textarea {
+.field-section textarea,
+.field-section input[type="file"] {
   width: 100%;
   border: 1px solid #B8AD9D;
   border-radius: 0;
@@ -1051,6 +1285,21 @@ button[type="button"]:not(.dashboard-nav button) {
 
 .field-section select {
   padding: 11px 12px;
+}
+
+.field-section input[type="file"] {
+  display: block;
+  padding: 10px;
+}
+
+.field-photo-preview {
+  display: block;
+  width: min(100%, 420px);
+  max-height: 280px;
+  margin-top: 12px;
+  object-fit: contain;
+  object-position: left;
+  background: #25211D;
 }
 
 .field-section textarea {

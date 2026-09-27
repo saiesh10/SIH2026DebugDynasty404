@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
 export async function getDashboard() {
   const response = await fetch(`${API_BASE}/api/dashboard`);
@@ -50,6 +50,19 @@ export async function getInspections() {
   return response.json();
 }
 
+export async function createInspection(inspection) {
+  const response = await fetch(`${API_BASE}/api/inspections`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(inspection)
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to log inspection");
+  }
+  return data;
+}
+
 export async function getCorrectiveActions() {
   const response = await fetch(`${API_BASE}/api/corrective-actions`);
 
@@ -60,7 +73,7 @@ export async function getCorrectiveActions() {
   return response.json();
 }
 export async function createFieldReport(report) {
-  const response = await fetch("http://localhost:4000/api/field-reports", {
+  const response = await fetch(`${API_BASE}/api/field-reports`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -72,4 +85,22 @@ export async function createFieldReport(report) {
     throw new Error(data.error || "Failed to create field report");
   }
   return data;
+}
+
+export async function getNotifications() {
+  const response = await fetch(`${API_BASE}/api/notifications`);
+  if (!response.ok) {
+    throw new Error("Failed to load alerts");
+  }
+  return response.json();
+}
+
+export async function markNotificationRead(notificationId) {
+  const response = await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
+    method: "PATCH"
+  });
+  if (!response.ok) {
+    throw new Error("Failed to acknowledge alert");
+  }
+  return response.json();
 }

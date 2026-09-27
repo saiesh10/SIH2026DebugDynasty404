@@ -8,6 +8,8 @@ import correctiveActionsRouter from "./routes/correctiveActions.js";
 import riskRouter from "./routes/risk.js";
 import dashboardRouter from "./routes/dashboard.js";
 import fieldReportsRouter from "./routes/fieldReports.js";
+import registryRouter from "./routes/registry.js";
+import notificationsRouter from "./routes/notifications.js";
 import { startAlertScheduler } from "./jobs/alertScheduler.js";
 
 dotenv.config();
@@ -15,7 +17,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "4mb" }));
 
 app.get("/health", (req, res) => {
   res.json({
@@ -31,6 +33,8 @@ app.use("/api/corrective-actions", correctiveActionsRouter);
 app.use("/api/risk", riskRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/field-reports", fieldReportsRouter);
+app.use("/api", registryRouter);
+app.use("/api/notifications", notificationsRouter);
 
 const PORT = process.env.PORT || 4000;
 

@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
         cr.type,
         cr.issue_date,
         cr.expiry_date,
-        cr.status,
+        CASE WHEN cr.expiry_date < CURRENT_DATE THEN 'expired' ELSE cr.status END AS status,
         cr.responsible_officer
       FROM compliance_record cr
       LEFT JOIN mine m ON cr.mine_id = m.id
@@ -43,7 +43,7 @@ router.get("/:id", async (req, res) => {
         cr.type,
         cr.issue_date,
         cr.expiry_date,
-        cr.status,
+        CASE WHEN cr.expiry_date < CURRENT_DATE THEN 'expired' ELSE cr.status END AS status,
         cr.responsible_officer
       FROM compliance_record cr
       LEFT JOIN mine m ON cr.mine_id = m.id
@@ -62,6 +62,67 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({
       error: "Failed to fetch compliance record"
     });
+  }
+});
+
+router.post("/", async (req, res) => {
+  const { mine_id, type, issue_date, expiry_date, status, responsible_officer } = req.body;
+  if (!mine_id || !type || !expiry_date) {
+    return res.status(400).json({ error: "mine_id, type and expiry_date are required" });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO compliance_record
+         (mine_id, type, issue_date, expiry_date, status, responsible_officer)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *;`,
+      [mine_id, type, issue_date || null, expiry_date, status || "valid", responsible_officer || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("Error creating compliance record:", error);
+    res.status(400).json({ error: "Unable to create compliance record; check mine and record type" });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  const { mine_id, type, issue_date, expiry_date, status, responsible_officer } = req.body;
+  if (!mine_id || !type || !expiry_date) {
+    return res.status(400).json({ error: "mine_id, type and expiry_date are required" });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE compliance_record
+       SET mine_id = $1, type = $2, issue_date = $3, expiry_date = $4,
+           status = $5, responsible_officer = $6
+       WHERE id = $7 RETURNING *;`,
+      [mine_id, type, issue_date || null, expiry_date, status || "valid", responsible_officer || null, req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Compliance record not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error updating compliance record:", error);
+    res.status(400).json({ error: "Unable to update compliance record; check mine and record type" });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "DELETE FROM compliance_record WHERE id = $1 RETURNING id;",
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Compliance record not found" });
+    }
+    res.json({ id: result.rows[0].id });
+  } catch (error) {
+    console.error("Error deleting compliance record:", error);
+    res.status(500).json({ error: "Failed to delete compliance record" });
   }
 });
 

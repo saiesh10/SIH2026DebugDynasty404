@@ -29,7 +29,7 @@ export function evaluateRiskRules({
     return new Date(action.due_date) < now;
   });
 
-  if (overdueOpenActions.length >= 2) {
+  if (overdueOpenActions.length > 2) {
     flags.push({
       type: "overdue_corrective_actions",
       severity: "high",

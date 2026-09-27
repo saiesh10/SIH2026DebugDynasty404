@@ -52,9 +52,23 @@ CREATE TABLE field_report (
   latitude FLOAT,
   longitude FLOAT,
   photo_url TEXT,
+  observation TEXT NOT NULL DEFAULT '',
   category TEXT CHECK (category IN ('safety_observation','incident','attendance')),
   submitted_at TIMESTAMP DEFAULT now(),
   synced BOOLEAN DEFAULT true
+);
+
+ALTER TABLE field_report
+  ADD COLUMN IF NOT EXISTS observation TEXT NOT NULL DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS notification (
+  id SERIAL PRIMARY KEY,
+  fingerprint TEXT NOT NULL UNIQUE,
+  notification_type TEXT NOT NULL,
+  mine_id INT REFERENCES mine(id),
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT now(),
+  read_at TIMESTAMP
 );
 
 CREATE TABLE audit_log (
