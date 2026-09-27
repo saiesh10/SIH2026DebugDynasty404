@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: khanrakshak
+      POSTGRES_PASSWORD: khanrakshak
+      POSTGRES_DB: khanrakshak
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./backend/seed:/docker-entrypoint-initdb.d
+
+volumes:
+  db_data:
