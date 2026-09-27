@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
+import Compliance from "./Compliance.jsx";
 
 const API_BASE = "http://localhost:4000";
 
@@ -154,6 +155,8 @@ function App() {
               </div>
             </section>
 
+            <Compliance />
+
             <section className="panel mines-panel">
               <div className="panel-header">
                 <h2>Registered Mines</h2>
@@ -193,3 +196,7 @@ function StatCard({ label, value, detail, tone }) {
 }
 
 export default App;
+
+
+
+
