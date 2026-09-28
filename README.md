@@ -22,80 +22,84 @@ KhanRakshak is a prototype for bringing mine-site compliance, inspections, risk 
 
 ## Product Screens
 
-Screens below were captured from the running application with the included demo data.
+The screenshots below were captured from the running application with the included demo data. Select a link to open the full-size screen.
 
-### Mine Official
-
-Mine-level clearance status, corrective actions, inspection history, and inspection logging.
-
-![Mine Official dashboard](frontend/public/mine-official.png)
-
-### Corporate
-
-Cross-mine portfolio summary and risk register with mine-level rule and model signals.
-
-![Corporate risk dashboard](frontend/public/corporate.png)
-
-### Regulator
-
-Read-only view of expired clearances and high-severity inspection records, with filters.
-
-![Regulator dashboard](frontend/public/regulator.png)
-
-### Field Report
-
-Offline-first field capture for GPS location, observation category, photo, and voice note.
-
-![Field report screen](frontend/public/field-report.png)
+| Screen | What it shows | Screenshot |
+| --- | --- | --- |
+| Mine Official | Mine-level compliance, corrective actions, inspection history, and inspection entry. | [Open Mine Official screenshot](frontend/public/mine-official.png) |
+| Corporate | Portfolio summary and per-mine risk register. | [Open Corporate screenshot](frontend/public/corporate.png) |
+| Regulator | Expired compliance and high-severity inspection register with filters. | [Open Regulator screenshot](frontend/public/regulator.png) |
+| Field Report | GPS-based field capture with observation, photo, voice note, and offline queue status. | [Open Field Report screenshot](frontend/public/field-report.png) |
 
 ## System Architecture
 
 ```mermaid
-flowchart LR
-		MineUser[Mine official]
-		CorporateUser[Corporate reviewer]
-		RegulatorUser[Regulator reviewer]
-		FieldUser[Field worker]
+flowchart TB
+	subgraph Client[Browser: React and PWA]
+		Screens[Role views<br/>Mine Official | Corporate | Regulator | Field Report]
+		ApiClient[Fetch API client]
+		ServiceWorker[Service worker<br/>caches app shell]
+		Queue[IndexedDB<br/>pending field reports]
+		Screens --> ApiClient
+		Screens -. app assets .-> ServiceWorker
+		Screens --> Queue
+		Queue -. reconnect and retry .-> ApiClient
+	end
 
-		subgraph Client[React client and PWA]
-				Views[Role-based dashboard views]
-				ApiClient[Fetch API client]
-				ShellCache[Service worker app-shell cache]
-				OfflineQueue[IndexedDB report queue]
-		end
+	subgraph Backend[Node.js backend]
+		Express[Express REST API]
+		Risk[Risk calculation<br/>rules, anomaly indicator, trend]
+		Scheduler[Alert scheduler<br/>startup and every 15 minutes]
+		Express --> Risk
+	end
 
-		subgraph Server[Node.js and Express API]
-				Routes[REST routes]
-				Risk[Risk rules, anomaly indicators, trend forecast]
-				Alerts[15-minute alert scheduler]
-		end
+	Database[(PostgreSQL<br/>mines, compliance, inspections,<br/>actions, reports, notifications)]
 
-		Database[(PostgreSQL)]
-
-		MineUser --> Views
-		CorporateUser --> Views
-		RegulatorUser --> Views
-		FieldUser --> Views
-		Views --> ApiClient
-		Views --> ShellCache
-		Views --> OfflineQueue
-		OfflineQueue -->|Reconnect and sync| ApiClient
-		ApiClient --> Routes
-		Routes --> Database
-		Routes --> Risk
-		Risk --> Database
-		Alerts --> Database
+	ApiClient <-->|HTTP JSON| Express
+	Express <--> Database
+	Risk <--> Database
+	Scheduler --> Database
 ```
 
-The React client is served by Vite during development. The Express API owns data access and business calculations, and PostgreSQL stores the demo records. The browser service worker caches the application shell; pending field reports are stored separately in IndexedDB and submitted to the API when the browser is online.
+During development, Vite serves the React client and Express serves the API on a separate port. The browser calls the API using HTTP and JSON. PostgreSQL is the persistent source for application records. The service worker caches the frontend shell; IndexedDB is a client-side retry queue for field reports, not a replacement for the server database.
 
-## Workflows
+## Operational Workflow
 
-1. **Mine governance:** The Mine Official view loads mines, compliance records, corrective actions, and inspections. Selecting a mine filters its ledger; officials can submit a new inspection.
-2. **Portfolio risk:** The Corporate view loads the dashboard summary and requests risk results for each mine. Risk scores combine expired and pending compliance with high- and medium-severity inspection counts. Rule flags add context for overdue actions, lapsed permits, and inspection cadence; anomaly and trend indicators are also returned.
-3. **Regulatory review:** The Regulator view combines expired compliance records and high-severity inspections into a dated register, then lets reviewers filter by violation type.
-4. **Field capture:** The Field Report view captures device coordinates, estimates the nearest mine from the seeded mine locations, and accepts an observation, photo, and optional voice note. If the API is unavailable, the report is queued in IndexedDB and retried when connectivity returns.
-5. **Alerts:** A backend scheduler checks compliance and corrective-action dates at startup and every 15 minutes, adding fingerprinted notifications to avoid duplicate alerts.
+```mermaid
+flowchart TD
+	Field[Field worker captures location and observation]
+	MineOfficial[Mine official records inspection]
+	Submit{API reachable?}
+	LocalQueue[Save field report to IndexedDB]
+	Retry[Retry queued report when online]
+	API[Express API validates request]
+	Store[(PostgreSQL stores operational records)]
+	Risk[Risk endpoint evaluates mine records on request]
+	Views[Corporate risk view and regulator register read API data]
+	Scheduler[Scheduler checks expiry and overdue dates<br/>at startup and every 15 minutes]
+	Notifications[Fingerprint and store notifications]
+	AlertView[Header displays alerts and acknowledgement status]
+
+	Field --> Submit
+	MineOfficial --> API
+	Submit -->|Yes| API
+	Submit -->|No| LocalQueue
+	LocalQueue --> Retry --> API
+	API --> Store
+	Store --> Risk
+	Risk --> Views
+	Store --> Scheduler
+	Scheduler --> Notifications --> Store
+	Store --> AlertView
+```
+
+### Role workflows
+
+1. **Mine Official:** Load mines, compliance, corrective actions, and inspections; choose a mine; review its status and log an inspection.
+2. **Corporate:** Load portfolio totals and request a risk result for each mine. The current score uses expired and pending clearances plus high- and medium-severity inspections. Rule flags provide context for overdue actions, lapsed contractor permits, and inspection cadence; anomaly and trend indicators are returned alongside the score.
+3. **Regulator:** Load compliance and inspection records; combine expired clearances and high-severity inspections into a dated register; filter the register by violation type.
+4. **Field Report:** Load or reuse cached mine coordinates; capture GPS; select a report category and add an observation, photo, or voice note; submit immediately or queue in IndexedDB and retry after connectivity returns.
+5. **Alerts:** Check compliance expiry and overdue open actions at backend startup and every 15 minutes; create fingerprinted notifications to avoid duplicates; let users review and acknowledge alerts.
 
 Risk and forecast outputs are prototype decision-support signals based on the included data and code. They are not certified safety assessments or substitutes for statutory inspection and professional judgment.
 
