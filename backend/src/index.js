@@ -1,6 +1,13 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config();
+
 import minesRouter from "./routes/mines.js";
 import complianceRouter from "./routes/compliance.js";
 import inspectionsRouter from "./routes/inspections.js";
@@ -11,19 +18,33 @@ import fieldReportsRouter from "./routes/fieldReports.js";
 import registryRouter from "./routes/registry.js";
 import notificationsRouter from "./routes/notifications.js";
 import { startAlertScheduler } from "./jobs/alertScheduler.js";
-
-dotenv.config();
+import { testDatabaseConnection } from "./db.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: "4mb" }));
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    service: "khanrakshak-backend",
-  });
+app.get("/health", async (req, res) => {
+  try {
+    const databaseReady = await testDatabaseConnection();
+    res.status(databaseReady ? 200 : 503).json({
+      status: databaseReady ? "ok" : "degraded",
+      service: "khanrakshak-backend",
+      database: databaseReady ? "connected" : "unavailable",
+      message: databaseReady
+        ? "Database connection successful."
+        : "Database is unavailable. Start PostgreSQL and confirm DATABASE_URL.",
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: "degraded",
+      service: "khanrakshak-backend",
+      database: "unavailable",
+      message: "Database is unavailable. Start PostgreSQL and confirm DATABASE_URL.",
+      error: error.message,
+    });
+  }
 });
 
 app.use("/api/mines", minesRouter);

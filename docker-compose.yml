@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: khanrakshak
       POSTGRES_DB: khanrakshak
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./backend/seed:/docker-entrypoint-initdb.d

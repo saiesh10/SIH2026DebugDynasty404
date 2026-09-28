@@ -47,7 +47,10 @@ export function startAlertScheduler() {
     try {
       await checkAlerts();
     } catch (error) {
-      console.error("Alert scheduler error:", error.message);
+      console.error(
+        "Alert scheduler skipped: database is unavailable. Start PostgreSQL and confirm DATABASE_URL.",
+        error.message
+      );
     }
   };
 
