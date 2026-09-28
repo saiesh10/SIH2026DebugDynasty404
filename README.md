@@ -36,7 +36,7 @@ The screenshots below were captured from the running application with the includ
 ```mermaid
 flowchart TB
 	subgraph Client[Browser: React and PWA]
-		Screens[Role views<br/>Mine Official | Corporate | Regulator | Field Report]
+		Screens[Role views<br/>Mine Official, Corporate, Regulator, Field Report]
 		ApiClient[Fetch API client]
 		ServiceWorker[Service worker<br/>caches app shell]
 		Queue[IndexedDB<br/>pending field reports]
