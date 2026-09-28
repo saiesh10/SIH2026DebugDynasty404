@@ -51,11 +51,16 @@ function App() {
     <div className="app">
       <header className="topbar">
         <div>
-          <div className="brand">
-            KHAN<span>RAKSHAK</span>
-          </div>
-          <div className="subtitle">
-            Coal Mine Governance & Compliance
+          <div className="brand-lockup">
+            <img className="brand-mark" src="/khanrakshak-mark.svg" alt="" aria-hidden="true" />
+            <div>
+              <div className="brand">
+                KHAN<span>RAKSHAK</span>
+              </div>
+              <div className="subtitle">
+                Coal Mine Governance & Compliance
+              </div>
+            </div>
           </div>
         </div>
 

@@ -59,6 +59,19 @@ button {
   border-bottom: 4px solid var(--ferrous);
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  display: block;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+}
+
 .brand {
   font-family: "Space Grotesk", sans-serif;
   font-size: 22px;
